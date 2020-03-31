@@ -2,9 +2,15 @@
 #define TRAFFICANALYZERWINDOW_H
 
 #include <QMainWindow>
-#include "packetlistveiw.h"
-#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QDialog>
+#include <QTimer>
 #include <QDebug>
+
+#include "packetlistveiw.h"
+#include "toppanel.h"
+#include "CaptureInterfaces/captureinterfaces.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TrafficAnalyzerWindow; }
@@ -20,5 +26,11 @@ public:
 
 private:
     Ui::TrafficAnalyzerWindow *ui;
+    TopPanel *topPanel;
+    PacketListVeiw *list;
+    QVBoxLayout *verticalLayout;
+    CaptureInterfaces *captureInterfaces;
+    QTimer *timer;
+
 };
 #endif // TRAFFICANALYZERWINDOW_H

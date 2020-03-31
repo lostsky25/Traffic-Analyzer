@@ -3,6 +3,12 @@
 
 #include <QWidget>
 #include <QTableView>
+#include <QHBoxLayout>
+#include <QTableWidget>
+#include <QHeaderView>
+#include <QDebug>
+
+#include "sniffpackets.h"
 
 class PacketListVeiw : public QWidget
 {
@@ -10,10 +16,14 @@ class PacketListVeiw : public QWidget
 public:
     explicit PacketListVeiw(QWidget *parent = nullptr);
 
-private:
-    QTableView *tableView;
-signals:
+public slots:
+    void listUpdate();
 
+private:
+    SniffPackets *sniffPackets;
+    QTableWidget *tableWidget;
+    QHBoxLayout *horizontalLayout;
+    QFont fontHelvetica;
 };
 
 #endif // PACKETLISTVEIW_H

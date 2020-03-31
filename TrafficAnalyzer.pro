@@ -1,5 +1,6 @@
 QT       += core gui
 INCLUDEPATH += C:/WpdPack/Include
+INCLUDEPATH += C:/tcpdump-4.9.3
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,12 +23,24 @@ LIBS += -lwpcap
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    CaptureInterfaces/captureinterfaces.cpp \
+    CaptureInterfaces/input.cpp \
+    CaptureInterfaces/options.cpp \
+    CaptureInterfaces/output.cpp \
     main.cpp \
     packetlistveiw.cpp \
+    sniffpackets.cpp \
+    toppanel.cpp \
     trafficanalyzerwindow.cpp
 
 HEADERS += \
+    CaptureInterfaces/captureinterfaces.h \
+    CaptureInterfaces/input.h \
+    CaptureInterfaces/options.h \
+    CaptureInterfaces/output.h \
     packetlistveiw.h \
+    sniffpackets.h \
+    toppanel.h \
     trafficanalyzerwindow.h
 
 FORMS += \

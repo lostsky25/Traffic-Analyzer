@@ -1,31 +1,53 @@
 #include "trafficanalyzerwindow.h"
 #include "ui_trafficanalyzerwindow.h"
-#include <winsock2.h>
-#include <pcap.h>
 
 TrafficAnalyzerWindow::TrafficAnalyzerWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TrafficAnalyzerWindow)
 {
     ui->setupUi(this);
+    verticalLayout = new QVBoxLayout(this);
+//    verticalBox->setAlignment(Qt::AlignTop);
 
-    QHBoxLayout *hBox = new QHBoxLayout(this);
+    //Widgets
+    topPanel = new TopPanel(this);
+    list = new PacketListVeiw(this);
 
-    PacketListVeiw *list = new PacketListVeiw(this);
+    timer = new QTimer();
+    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(list->update()));
+    timer->start(100);
 
-    hBox->addWidget(list);
+    QObject::connect(topPanel, SIGNAL(btnStartSniffClicked()),
+                     list, SLOT(listUpdate()));
 
-    centralWidget()->setLayout(hBox);
+    QObject::connect(topPanel, &TopPanel::btnSettingsSniffClicked,
+                     [=] () {
+            //Dialog
+            captureInterfaces = new CaptureInterfaces();
+            captureInterfaces->show();
+    });
 
-    char *dev, errbuf[PCAP_ERRBUF_SIZE];
+//    QObject::connect(topPanel, SIGNAL(btnStopSniffClicked()),
+//                     list, SLOT(()));
+//    QObject::connect(topPanel, &TopPanel::btnSettingsSniffClicked,
+//                     [=] () {
+//        QDialog *dialog = new QDialog();
+//        QHBoxLayout *horizontalLayout = new QHBoxLayout();
 
-    dev = pcap_lookupdev(errbuf);
-    if (dev == NULL) {
-        qDebug() << "Couldn't find default device: " << errbuf;
-    }
-    qDebug() << "Device: " << dev;
+//        horizontalLayout->addWidget(captureInterfaces);
+//        dialog->setWindowTitle("Settings");
+//        dialog->setLayout(horizontalLayout);
 
-    qDebug() << "C++ Style Info Message";
+//        dialog->show();
+//    });
+//    QObject::connect(topPanel, SIGNAL(btnRefreshSniffClicked()),
+//                     list, SLOT(listUpdate()));
+
+
+    verticalLayout->addWidget(topPanel);
+    verticalLayout->addWidget(list);
+
+    centralWidget()->setLayout(verticalLayout);
 }
 
 TrafficAnalyzerWindow::~TrafficAnalyzerWindow()
