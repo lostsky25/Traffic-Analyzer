@@ -27,6 +27,9 @@ TrafficAnalyzerWindow::TrafficAnalyzerWindow(QWidget *parent)
             captureInterfaces->show();
     });
 
+    QObject::connect(topPanel, SIGNAL(btnStopSniffClicked()), list, SLOT(stopUpdate()));
+    QObject::connect(topPanel, SIGNAL(btnRefreshSniffClicked()), list, SLOT(refreshList()));
+
 //    QObject::connect(topPanel, SIGNAL(btnStopSniffClicked()),
 //                     list, SLOT(()));
 //    QObject::connect(topPanel, &TopPanel::btnSettingsSniffClicked,

@@ -1,5 +1,4 @@
 #include "toppanel.h"
-#include <QDebug>
 
 TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
 {
@@ -22,7 +21,7 @@ TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
 
     btnStopSniff = new QPushButton(this);
 //    btnStopSniff->setIcon(QIcon("C:/Users/User/Desktop/shark_stop.png"));
-    btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop.png); }");
+    btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop_non_active.png); }");
     btnStopSniff->setFixedSize(ICON_SIZE, ICON_SIZE);
     btnStopSniff->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
 
@@ -38,8 +37,8 @@ TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
     horizontalLayout->addWidget(btnSettingsSniff);
 
     QObject::connect(btnStartSniff, SIGNAL(clicked()), this, SLOT(btnStartSniffEvent()));
-//    QObject::connect(btnStartSniff, SIGNAL(clicked()), this, SLOT(btnStartSniffEvent()));
-//    QObject::connect(btnStartSniff, SIGNAL(clicked()), this, SLOT(btnStartSniffEvent()));
+    QObject::connect(btnStopSniff, SIGNAL(clicked()), this, SLOT(btnStopSniffEvent()));
+    QObject::connect(btnRefreshSniff, SIGNAL(clicked()), this, SLOT(btnRefreshSniffEvent()));
     QObject::connect(btnSettingsSniff, SIGNAL(clicked()), this, SLOT(btnSettingsSniffEvent()));
 
 
@@ -55,12 +54,14 @@ void TopPanel::btnStartSniffEvent()
 {
     //qDebug() << __FUNCTION__;
     btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing.png); }");
+    btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop.png); }");
     emit btnStartSniffClicked();
 }
 
 void TopPanel::btnStopSniffEvent()
 {
-    //btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing.png); }");
+    btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_start.png); }");
+    btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop_non_active.png); }");
     emit btnStopSniffClicked();
 }
 

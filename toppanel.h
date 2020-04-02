@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QHBoxLayout>
+#include <QDebug>
 
 class TopPanel : public QWidget
 {

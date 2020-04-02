@@ -27,8 +27,10 @@ SOURCES += \
     CaptureInterfaces/input.cpp \
     CaptureInterfaces/options.cpp \
     CaptureInterfaces/output.cpp \
+    filterexpression.cpp \
     main.cpp \
     packetlistveiw.cpp \
+    payload.cpp \
     sniffpackets.cpp \
     toppanel.cpp \
     trafficanalyzerwindow.cpp
@@ -38,7 +40,9 @@ HEADERS += \
     CaptureInterfaces/input.h \
     CaptureInterfaces/options.h \
     CaptureInterfaces/output.h \
+    filterexpression.h \
     packetlistveiw.h \
+    payload.h \
     sniffpackets.h \
     toppanel.h \
     trafficanalyzerwindow.h
