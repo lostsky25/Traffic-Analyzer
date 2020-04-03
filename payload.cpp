@@ -1,5 +1,5 @@
 #include "payload.h"
-
+#include <QMessageLogger>
 
 Payload::Payload(QWidget *parent) : QWidget(parent)
 {
@@ -20,12 +20,7 @@ void Payload::cellActivated(int row, int column)
     if(!allPacketsPayloads.isEmpty() && (allPacketsPayloads.length() > row)){
         plain->clear();
         plain->update();
-        try {
-            plain->append(allPacketsPayloads.at(row));
-        } catch (...) {
-//            qDebug() << "table CRASH";
-        }
-
+        plain->append(allPacketsPayloads.at(row));
     }
 }
 

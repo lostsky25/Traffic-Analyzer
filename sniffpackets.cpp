@@ -1,13 +1,12 @@
 #include "sniffpackets.h"
 
+QString fullPayloadStr;
 QTableWidget *table;
 Payload *payloadLog;
-int row, col;
-//double lastTime;
-pcap_t *handle;
-QString buf;
-QString fullPayloadStr;
 char *filterExpBuf;
+pcap_t *handle;
+int row, col;
+QString buf;
 
 SniffPackets::SniffPackets(){
 
@@ -18,9 +17,11 @@ SniffPackets::SniffPackets(QTableWidget *tableWidget, Payload *payloadLog){
     ::col = 0;
     ::table = tableWidget;
     ::payloadLog = payloadLog;
+    logging = new Logging();
 }
 
 SniffPackets::~SniffPackets(){
+//    delete logging;
     pcap_freealldevs(all_devs);
     pcap_close(handle);
 //    free(::fullPayloadStr);
@@ -32,60 +33,53 @@ void SniffPackets::setFilter(QString buf){
 }
 
 void SniffPackets::init(){
-//    timer1 = new QTimer();
-//    QObject::connect(timer1, SIGNAL(timeout()), this, SLOT(emit newPacket(fullPayloadStr)));
-
-//    timer1->start(100);
+    fullPayloadStr = (char*)malloc(50);
 
     char *filter_exp = (char*)::filterExpBuf;
-    qDebug() << "FILTER EXP: " << filter_exp << ::filterExpBuf;
+    logging->messageHandler(QtInfoMsg, QString("Set filter: %1").arg(filter_exp));
 
     //dev = pcap_lookupdev(errbuf);
-    dev = "/Device/NPF_{1F9302CB-4A9C-45AF-BAC5-11F305828DCB}";    
+    dev = DEFAULT_DEV;
 
-    qDebug() << "Line: " << __LINE__ << " dev: " << dev << "Error value: " << errbuf;
-    qDebug() << "Init started";
+    logging->messageHandler(QtInfoMsg, QString("Default device: %1").arg(dev));
+
     //Default network device
     if (pcap_findalldevs(&all_devs, errbuf) == -1)
     {
-        qDebug() << "Error in pcap_findalldevs: " << errbuf;
-        //fprintf(stderr, "Error in pcap_findalldevs: %s\n", errbuf);
-        //return EXIT_FAILURE;
+        logging->messageHandler(QtFatalMsg, QString("Error in find all devs: %1").arg(errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
     }
 
     if (dev == NULL)
     {
-        qDebug() << "Couldn't find default device: " << errbuf;
-        //fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
-        //return EXIT_FAILURE;
+        logging->messageHandler(QtFatalMsg, QString("Couldn't find default device: %1").arg(errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
     }
-
-    printf("Dev: %s\n", dev);
 
     //Find the IPv4 network number and netmask for a device
     if(pcap_lookupnet(dev, &net, &mask, errbuf) == -1){
-        qDebug() << "Can't get netmask for device " << dev;
         net = 0;
         mask = 0;
+        logging->messageHandler(QtFatalMsg, QString("Can't get netmask for device %1: %2").arg(dev, errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
     }
 
     //Get descriptor of session (sniffing session)
     handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
     if(handle == NULL){
-        qDebug() << "Couldn't open device %s: " << dev << " " << errbuf;
-        //return EXIT_FAILURE;
+        logging->messageHandler(QtFatalMsg, QString("Couldn't open device %1: %2").arg(dev, errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
     }
 
     if(pcap_compile(handle, &fp, filter_exp, 0, net) == -1){
-        qDebug() << "Couldn't parse filter: " << filter_exp;
-        //return EXIT_FAILURE;
+        logging->messageHandler(QtFatalMsg, QString("Couldn't parse filter: %1").arg(filter_exp));
+        QCoreApplication::exit(EXIT_FAILURE);
     }
 
     if(pcap_setfilter(handle, &fp)){
-        qDebug() << "Couldn't install filter: " << filter_exp;
-        //return EXIT_FAILURE;
+        logging->messageHandler(QtFatalMsg, QString("Couldn't install filter: %1").arg(filter_exp));
+        QCoreApplication::exit(EXIT_FAILURE);
     }
-    fullPayloadStr = (char*)malloc(50);
 }
 
 /*
@@ -95,13 +89,10 @@ void SniffPackets::init(){
  */
 void SniffPackets::print_hex_ascii_line(const u_char *payload, int len, int offset)
 {
-//    static int count = 0;
     int i;
     int gap;
     const u_char *ch;
     /* offset */
-//    fullPayloadStr.append(QString::number(offset));
-//    qDebug() << fullPayloadStr;
     buf.sprintf("%05d   ", offset);
     fullPayloadStr.append(buf);
 
@@ -147,27 +138,10 @@ void SniffPackets::print_hex_ascii_line(const u_char *payload, int len, int offs
         }
         ch++;
     }
-//    count++;
-//    sprintf(fullPayloadStr + strlen(fullPayloadStr), "\n");
-//    qDebug() << fullPayloadStr;
-//    sniffPackets.newPacket(fullPayloadStr);
 
-//    if(count < 200){
-//        buf.sprintf("\n");
-//        fullPayloadStr.append(buf);
-//    }
-//    else{
-//        ::payloadLog->appendPayload(fullPayloadStr);
-//        count = 0;
-//        fullPayloadStr.clear();
-//    }
     buf.sprintf("\n");
     fullPayloadStr.append(buf);
-
-//    ::payloadLog->update();
-//    free(fullPayloadStr);
-//    fullPayloadStr.clear();
-return;
+    return;
 }
 
 void SniffPackets::print_payload(const u_char *payload, int len)
@@ -254,15 +228,6 @@ void SniffPackets::sniff(unsigned char *useless, const struct pcap_pkthdr* pkthd
     //!Source
 
     payload = (unsigned char *)(packet + SIZE_ETHERNET + size_ip + size_tcp);
-//    QString str = "";
-
-
-//    qDebug() << "Row: " << row << " " << payload;
-    //Distination
-//    sprintf(temp_buf, "%s", payload);
-//    table->setItem(row, 3, new QTableWidgetItem(temp_buf));
-//    table->insertRow(row+1);
-    //!Distination
 
     //Distination
     sprintf(temp_buf, "%3d.%3d.%3d.%3d", (int)eth->ether_dhost[0], (int)eth->ether_dhost[1], (int)eth->ether_dhost[2], (int)eth->ether_dhost[3]);
@@ -272,7 +237,6 @@ void SniffPackets::sniff(unsigned char *useless, const struct pcap_pkthdr* pkthd
 
     print_payload(payload, size_tcp);
     ::payloadLog->appendPayload(fullPayloadStr);
-//    qDebug() << endl << endl << fullPayloadStr;
     fullPayloadStr.clear();
 
     row++;
@@ -281,15 +245,12 @@ void SniffPackets::sniff(unsigned char *useless, const struct pcap_pkthdr* pkthd
 void SniffPackets::refreshSniff(){
     ::row = 0;
     ::col = 0;
-//    ::lastTime = 0;
     table->clearContents();
     table->setRowCount(30);
     timer(RESTART_TIMER);
 }
 
-void SniffPackets::stopSniff(/*pcap_t**/){
-//    lastTime = timer(GET_TIMER);
-//    timer(RESTART_TIMER);
+void SniffPackets::stopSniff(){
     pcap_breakloop(handle);
 }
 

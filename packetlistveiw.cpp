@@ -2,7 +2,7 @@
 
 PacketListVeiw::PacketListVeiw(QWidget *parent) : QWidget(parent)
 {
-
+    logging = new Logging();
     horizontalLayout = new QHBoxLayout(this);
     verticalLayout = new QVBoxLayout(this);
 
@@ -88,17 +88,20 @@ void PacketListVeiw::getFilterExp(const QString &filterExpBuf){
 }
 
 void PacketListVeiw::listUpdate(){
+    logging->messageHandler(QtInfoMsg, QString("Update list (start)"));
     sniffPackets->start();
     emit sniffStart();
     emit sendFilter(this->filterExpBuf);
 }
 
 void PacketListVeiw::refreshList(){
+    logging->messageHandler(QtInfoMsg, QString("Refresh"));
     sniffPackets->refreshSniff();
     emit sniffRefresh();
 }
 
 void PacketListVeiw::stopUpdate(){
+    logging->messageHandler(QtInfoMsg, QString("Stop"));
     sniffPackets->stopSniff();
     emit sniffStop();
 //    sniffPackets->terminate(); //???

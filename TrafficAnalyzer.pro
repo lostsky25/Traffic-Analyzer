@@ -15,7 +15,16 @@ DEFINES += WPCAP
 DEFINES += HAVE_REMOTE
 
 LIBS += -LC:/WpdPack/Lib
-LIBS += -lwpcap
+
+
+unix{
+    LIBS += -lpcap
+}
+
+win32{
+    LIBS += -lwpcap
+}
+
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -33,7 +42,8 @@ SOURCES += \
     payload.cpp \
     sniffpackets.cpp \
     toppanel.cpp \
-    trafficanalyzerwindow.cpp
+    trafficanalyzerwindow.cpp \
+    logging.cpp
 
 HEADERS += \
     CaptureInterfaces/captureinterfaces.h \
@@ -45,7 +55,8 @@ HEADERS += \
     payload.h \
     sniffpackets.h \
     toppanel.h \
-    trafficanalyzerwindow.h
+    trafficanalyzerwindow.h \
+    logging.h
 
 FORMS += \
     trafficanalyzerwindow.ui

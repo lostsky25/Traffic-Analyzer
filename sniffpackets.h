@@ -1,20 +1,36 @@
 #ifndef SNIFFPACKETS_H
 #define SNIFFPACKETS_H
 
-#include <QThread>
-#include <QTableWidget>
+#include <QCoreApplication>
 #include <QElapsedTimer>
-#include <QTime>
+#include <QTableWidget>
+#include <QThread>
 #include <QTimer>
 #include <QDebug>
+#include <QTime>
 
 #include "payload.h"
+#include "logging.h"
+
+#ifdef __linux__
+    #define DEFAULT_DEV "wlx8416f91538ab"
+#elif
+    #define DEFAULT_DEV "/Device/NPF_{1F9302CB-4A9C-45AF-BAC5-11F305828DCB}"
+#endif
 
 extern "C"{
-    #include <pcap.h>
-    #include <ether.h>
-}
+    #ifdef __linux__
+        #include <pcap.h>
+        #include <netinet/in.h>
+        #include <netinet/if_ether.h>
+    #elif _WIN32
+        #include <pcap.h>
+        #include <ether.h>
+    #else
 
+    #endif
+
+}
 #define ETH_SIZE 32
 
 #define SIZE_ETHERNET 14
@@ -88,6 +104,7 @@ public:
     void setFilter(QString);
 
 private:
+    Logging *logging;
     char* dev;
     pcap_if_t *all_devs;
     int count = 0, selected_index = 0;

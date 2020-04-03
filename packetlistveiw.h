@@ -12,6 +12,7 @@
 #include "filterexpression.h"
 #include "sniffpackets.h"
 #include "payload.h"
+#include "logging.h"
 
 class PacketListVeiw : public QWidget
 {
@@ -32,14 +33,15 @@ signals:
     void sniffRefresh();
 
 private:
-    SniffPackets *sniffPackets;
     FilterExpression *filterExpression;
-    Payload *payloadLog;
-    QString filterExpBuf;
-    QTableWidget *tableWidget;
     QHBoxLayout *horizontalLayout;
     QVBoxLayout *verticalLayout;
+    SniffPackets *sniffPackets;
+    QTableWidget *tableWidget;
+    QString filterExpBuf;
+    Payload *payloadLog;
     QFont fontHelvetica;
+    Logging *logging;
 };
 
 #endif // PACKETLISTVEIW_H

@@ -6,7 +6,7 @@ TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
     horizontalLayout->setAlignment(Qt::AlignLeft);
 
     btnStartSniff = new QPushButton(this);
-//    btnStartSniff->setIcon(QIcon("C:/Users/User/Desktop/shark_start.png"));
+//    btnStartSniff->setIcon(QIcon(":icons/shark_start.png"));
     btnStartSniff->setFixedSize(ICON_SIZE, ICON_SIZE);
     btnStartSniff->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
 
