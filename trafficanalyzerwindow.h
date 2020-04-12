@@ -25,12 +25,12 @@ public:
     ~TrafficAnalyzerWindow();
 
 private:
-    Ui::TrafficAnalyzerWindow *ui;
     TopPanel *topPanel;
     PacketListVeiw *list;
+    QTableWidgetItem *lastDeviceName;
     QVBoxLayout *verticalLayout;
+    Ui::TrafficAnalyzerWindow *ui;
+    SelectedDevice *selectedDevice;
     CaptureInterfaces *captureInterfaces;
-    QTimer *timer;
-
 };
 #endif // TRAFFICANALYZERWINDOW_H

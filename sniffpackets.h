@@ -14,8 +14,11 @@
 
 #ifdef __linux__
     #define DEFAULT_DEV "wlx8416f91538ab"
-#elif
-    #define DEFAULT_DEV "/Device/NPF_{1F9302CB-4A9C-45AF-BAC5-11F305828DCB}"
+#elif _WIN32
+    #define DEFAULT_DEV "/Device/NPF_{447F6203-87BD-431F-8252-765287CC331C}"
+// /Device/NPF_{1E696F08-39A9-493E-B3A0-C80DF562B8E7}
+// /Device/NPF_{447F6203-87BD-431F-8252-765287CC331C}
+// /Device/NPF_{1F9302CB-4A9C-45AF-BAC5-11F305828DCB}
 #endif
 
 extern "C"{
@@ -31,6 +34,7 @@ extern "C"{
     #endif
 
 }
+
 #define ETH_SIZE 32
 
 #define SIZE_ETHERNET 14
@@ -63,6 +67,7 @@ struct sniff_ip {
     u_short ip_sum;                         /* checksum */
     struct  in_addr ip_src,ip_dst;          /* source and dest address */
 };
+
 #define     IP_HL(ip)    (((ip)->ip_vhl) & 0x0f)
 #define     IP_V(ip)     (((ip)->ip_vhl) >> 4)
 
@@ -85,7 +90,7 @@ struct sniff_tcp {
     #define TH_URG 0x20
     #define TH_ECE 0x40
     #define TH_CWR 0x80
-#define TH_FLAGS  (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
+    #define TH_FLAGS  (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
     u_short th_win;                         /* window */
     u_short th_sum;                         /* checksum */
     u_short th_urp;                         /* urgent pointer */
@@ -93,6 +98,7 @@ struct sniff_tcp {
 
 class SniffPackets : public QThread
 {
+//    Q_OBJECT
 public:
     SniffPackets();
     SniffPackets(QTableWidget*, Payload*);
@@ -101,14 +107,26 @@ public:
     static void refreshSniff();
     ~SniffPackets();
 
+    void initialyzePcap(char *);
     void setFilter(QString);
+    int getLoadOfNet();
+//    void setDefaultDevice();
+    void setDeviceName(char *);
+    void compileFilter(pcap_t *);
+    void setFilterExpresion(char *);
+    void openSession(char*, int, int, int);
+    QStringList getDeviceNames();
+    void setNetmask(char *, bpf_u_int32 *, bpf_u_int32 *);
+
+//signals:
+//    void sendNameDevices(const QStringList &);
 
 private:
-    Logging *logging;
-    char* dev;
-    pcap_if_t *all_devs;
-    int count = 0, selected_index = 0;
-    bool timerStartState = true;
+    char* dev;                      //Interface name
+    char *filterExp;                //Filter expresion
+    Logging *logging;               //For logining
+    pcap_if_t *all_devs, *d;            //Singly linked list of all devices
+    bool timerStartState = true;    //Elasped time
 
     struct bpf_program fp;          //Compiled filter
     bpf_u_int32 mask;               //The netmask of our sniffing device
@@ -116,9 +134,10 @@ private:
 
     struct pcap_pkthdr header;      //The header that pcap gives us
     const unsigned char *packet;    //The actual packet
+    QStringList nameDevices;
 
-    char errbuf[PCAP_ERRBUF_SIZE];
-    void init();
+    char errbuf[PCAP_ERRBUF_SIZE];  //Error buffer
+
     static void sniff(unsigned char *useless,const struct pcap_pkthdr* pkthdr,const unsigned char* packet);
     static void print_hex_ascii_line(const u_char *, int, int);
     static void print_payload(const u_char *, int);

@@ -36,6 +36,8 @@ SOURCES += \
     CaptureInterfaces/input.cpp \
     CaptureInterfaces/options.cpp \
     CaptureInterfaces/output.cpp \
+    SelectedDevice/loadchart.cpp \
+    SelectedDevice/selecteddevice.cpp \
     filterexpression.cpp \
     main.cpp \
     packetlistveiw.cpp \
@@ -50,6 +52,8 @@ HEADERS += \
     CaptureInterfaces/input.h \
     CaptureInterfaces/options.h \
     CaptureInterfaces/output.h \
+    SelectedDevice/loadchart.h \
+    SelectedDevice/selecteddevice.h \
     filterexpression.h \
     packetlistveiw.h \
     payload.h \

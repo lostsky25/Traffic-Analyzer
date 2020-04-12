@@ -8,11 +8,15 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QDebug>
+#include <QTimer>
 
 #include "filterexpression.h"
+#include "SelectedDevice/selecteddevice.h"
 #include "sniffpackets.h"
 #include "payload.h"
 #include "logging.h"
+
+
 
 class PacketListVeiw : public QWidget
 {
@@ -21,15 +25,18 @@ public:
     explicit PacketListVeiw(QWidget *parent = nullptr);
 
 public slots:
-    void listUpdate();
+//    void listUpdate(QTableWidgetItem *);
+    QStringList getDeviceNames();
     void refreshList();
     void stopUpdate();
-    void getFilterExp(const QString&);
+    void startSniff(QTableWidgetItem *);
+    void setFilterExp(const QString&);
 
 signals:
     void sendFilter(const QString&);
-    void sniffStart();
-    void sniffStop();
+    void lastDeviceName(QTableWidgetItem *);
+    void sniffStarted();
+    void sniffStoped();
     void sniffRefresh();
 
 private:
@@ -39,6 +46,7 @@ private:
     SniffPackets *sniffPackets;
     QTableWidget *tableWidget;
     QString filterExpBuf;
+    QTimer *timer;
     Payload *payloadLog;
     QFont fontHelvetica;
     Logging *logging;

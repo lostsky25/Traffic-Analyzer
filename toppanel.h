@@ -11,6 +11,7 @@ class TopPanel : public QWidget
     Q_OBJECT
 public:
     explicit TopPanel(QWidget *parent = nullptr);
+    void setEnabledPanel(bool);
     QPushButton *btnStartSniff;
     QPushButton *btnStopSniff;
     QPushButton *btnSettingsSniff;
@@ -19,14 +20,6 @@ public:
 public slots:
     void btnStartSniffEvent();
     void btnStopSniffEvent();
-    void btnSettingsSniffEvent();
-    void btnRefreshSniffEvent();
-
-signals:
-    void btnStartSniffClicked();
-    void btnStopSniffClicked();
-    void btnSettingsSniffClicked();
-    void btnRefreshSniffClicked();
 
 private:
     QHBoxLayout *horizontalLayout;

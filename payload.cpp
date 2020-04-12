@@ -24,6 +24,10 @@ void Payload::cellActivated(int row, int column)
     }
 }
 
+void Payload::clearData(){
+    allPacketsPayloads.clear();
+}
+
 void Payload::clearPlane()
 {
     plain->clear();

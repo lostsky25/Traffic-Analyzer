@@ -10,14 +10,14 @@ TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
     btnStartSniff->setFixedSize(ICON_SIZE, ICON_SIZE);
     btnStartSniff->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
 
-    btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_start.png); }");
+    btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing_or_non_active.png); }");
 
     btnRefreshSniff = new QPushButton(this);
 //    btnStartSniff->setIcon(QIcon("C:/Users/User/Desktop/shark_start.png"));
     btnRefreshSniff->setFixedSize(ICON_SIZE, ICON_SIZE);
     btnRefreshSniff->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
 
-    btnRefreshSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_refresh.png); }");
+    btnRefreshSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing_or_non_active.png); }");
 
     btnStopSniff = new QPushButton(this);
 //    btnStopSniff->setIcon(QIcon("C:/Users/User/Desktop/shark_stop.png"));
@@ -38,8 +38,8 @@ TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
 
     QObject::connect(btnStartSniff, SIGNAL(clicked()), this, SLOT(btnStartSniffEvent()));
     QObject::connect(btnStopSniff, SIGNAL(clicked()), this, SLOT(btnStopSniffEvent()));
-    QObject::connect(btnRefreshSniff, SIGNAL(clicked()), this, SLOT(btnRefreshSniffEvent()));
-    QObject::connect(btnSettingsSniff, SIGNAL(clicked()), this, SLOT(btnSettingsSniffEvent()));
+//    QObject::connect(btnRefreshSniff, SIGNAL(clicked()), this, SLOT(btnRefreshSniffEvent()));
+//    QObject::connect(btnSettingsSniff, SIGNAL(clicked()), this, SLOT(btnSettingsSniffEvent()));
 
 
 //    horizontalLayout->setSpacing(0);
@@ -50,29 +50,33 @@ TopPanel::TopPanel(QWidget *parent) : QWidget(parent)
 
 }
 
+void TopPanel::setEnabledPanel(bool state){
+    if(state){
+//        btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_start.png); }");
+        btnRefreshSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_refresh.png); }");
+        btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop.png); }");
+        btnStartSniff->setEnabled(true);
+        btnStopSniff->setEnabled(true);
+        btnRefreshSniff->setEnabled(true);
+    }else{
+        btnStartSniff->setEnabled(false);
+        btnStopSniff->setEnabled(false);
+        btnRefreshSniff->setEnabled(false);
+    }
+}
+
 void TopPanel::btnStartSniffEvent()
 {
-    //qDebug() << __FUNCTION__;
-    btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing.png); }");
+    btnStartSniff->setEnabled(false);
+    btnStopSniff->setEnabled(true);
+    btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing_or_non_active.png); }");
     btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop.png); }");
-    emit btnStartSniffClicked();
 }
 
 void TopPanel::btnStopSniffEvent()
 {
+    btnStartSniff->setEnabled(true);
+    btnStopSniff->setEnabled(false);
     btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_start.png); }");
     btnStopSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_stop_non_active.png); }");
-    emit btnStopSniffClicked();
-}
-
-void TopPanel::btnSettingsSniffEvent()
-{
-    //btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing.png); }");
-    emit btnSettingsSniffClicked();
-}
-
-void TopPanel::btnRefreshSniffEvent()
-{
-    //btnStartSniff->setStyleSheet("QPushButton { border-image: url(C:/Users/User/Desktop/shark_is_runing.png); }");
-    emit btnRefreshSniffClicked();
 }

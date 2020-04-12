@@ -17,6 +17,7 @@ public slots:
     void appendPayload(QString text);
     void cellActivated(int, int);
     void clearPlane();
+    void clearData();
 
 private:
     QStringList allPacketsPayloads;

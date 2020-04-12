@@ -1,9 +1,9 @@
-#include "input.h"
+#include "selecteddevice.h"
 
-Input::Input(QWidget *parent) : QWidget(parent)
+SelectedDevice::SelectedDevice(QWidget *parent) : QWidget(parent)
 {
     row = column = 0;
-
+//    model = new QStandardItemModel(this);
     table = new QTableWidget(this);
     verticalLayout = new QVBoxLayout(this);
 
@@ -17,24 +17,27 @@ Input::Input(QWidget *parent) : QWidget(parent)
 
     table->horizontalHeader()->hide();
     table->verticalHeader()->hide();
-
     table->setColumnCount(2);
     table->setColumnWidth(0, 300);
     table->setColumnWidth(1, 300);
 
     table->setMinimumSize(QSize(500,500));
 
+    verticalLayout->setSpacing(0);
+    verticalLayout->setMargin(0);
+    verticalLayout->setContentsMargins(0, 0, 0, 0);
 
 
     verticalLayout->addWidget(table);
     setLayout(verticalLayout);
 }
 
-QTableWidget * Input::getTable(){
+QTableWidget* SelectedDevice::getTable()
+{
     return table;
 }
 
-void Input::addDevice(const QStringList &names)
+void SelectedDevice::addDevice(const QStringList &names)
 {
     QString description;
     foreach(QString name, names){
@@ -45,6 +48,7 @@ void Input::addDevice(const QStringList &names)
 
         foreach(QString part, currentName){
             description.append(part + " ");
+            qDebug() << part;
         }
         column = 0;
         table->setItem(row, 1, new QTableWidgetItem(description));

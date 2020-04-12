@@ -7,9 +7,13 @@ char *filterExpBuf;
 pcap_t *handle;
 int row, col;
 QString buf;
+int load = 0;
 
 SniffPackets::SniffPackets(){
-
+    ::row = 0;
+    ::col = 0;
+    logging = new Logging();
+    fullPayloadStr = (char*)malloc(50);
 }
 
 SniffPackets::SniffPackets(QTableWidget *tableWidget, Payload *payloadLog){
@@ -18,13 +22,12 @@ SniffPackets::SniffPackets(QTableWidget *tableWidget, Payload *payloadLog){
     ::table = tableWidget;
     ::payloadLog = payloadLog;
     logging = new Logging();
+    fullPayloadStr = (char*)malloc(50);
 }
 
 SniffPackets::~SniffPackets(){
-//    delete logging;
     pcap_freealldevs(all_devs);
     pcap_close(handle);
-//    free(::fullPayloadStr);
 }
 
 void SniffPackets::setFilter(QString buf){
@@ -32,54 +35,94 @@ void SniffPackets::setFilter(QString buf){
     ::filterExpBuf = ba.data();
 }
 
-void SniffPackets::init(){
-    fullPayloadStr = (char*)malloc(50);
+int SniffPackets::getLoadOfNet()
+{
+    return ::load;
+}
 
-    char *filter_exp = (char*)::filterExpBuf;
-    logging->messageHandler(QtInfoMsg, QString("Set filter: %1").arg(filter_exp));
+void SniffPackets::setFilterExpresion(char *filterExp){
+    this->filterExp = filterExp;
+    logging->messageHandler(QtInfoMsg, QString("Set filter: %1").arg(filterExp));
+}
 
-    //dev = pcap_lookupdev(errbuf);
-    dev = DEFAULT_DEV;
+void SniffPackets::setDeviceName(char *devName){
+    dev = devName;
+    if (dev == NULL)
+    {
+        logging->messageHandler(QtFatalMsg, QString("Couldn't find this device: %1").arg(errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
+    }else{
+        logging->messageHandler(QtInfoMsg, QString("Choose device: %1").arg(dev));
+    }
+}
 
-    logging->messageHandler(QtInfoMsg, QString("Default device: %1").arg(dev));
+void SniffPackets::setNetmask(char *dev, bpf_u_int32 *net, bpf_u_int32 *mask){
+    //Find the IPv4 network number and netmask for a device
+    if(pcap_lookupnet(dev, net, mask, errbuf) == -1){
+        net = 0;
+        mask = 0;
+        logging->messageHandler(QtFatalMsg, QString("Can't get netmask for device %1: %2").arg(dev, errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
+    }
+}
 
+void SniffPackets::openSession(char *dev, int snaplen, int promisc, int to_ms){
+    //Get descriptor of session (sniffing session)
+    handle = pcap_open_live(dev, snaplen, promisc, to_ms, errbuf);
+    if(handle == NULL){
+        logging->messageHandler(QtFatalMsg, QString("Couldn't open device %1: %2").arg(dev, errbuf));
+        QCoreApplication::exit(EXIT_FAILURE);
+    }
+}
+
+void SniffPackets::compileFilter(pcap_t *handle){
+    if(pcap_compile(handle, &fp, filterExp, 0, net) == -1){
+        logging->messageHandler(QtFatalMsg, QString("Couldn't parse filter: %1").arg(filterExp));
+        QCoreApplication::exit(EXIT_FAILURE);
+    }
+
+    if(pcap_setfilter(handle, &fp)){
+        logging->messageHandler(QtFatalMsg, QString("Couldn't install filter: %1").arg(filterExp));
+        QCoreApplication::exit(EXIT_FAILURE);
+    }
+}
+
+//void SniffPackets::sendNameDevices(const QStringList &){
+
+//}
+
+void SniffPackets::initialyzePcap(char *devName){
+    setFilterExpresion(::filterExpBuf);
+    setDeviceName(devName);
+    setNetmask(dev, &net, &mask);
+    openSession(dev, BUFSIZ, 1, 1000);
+    compileFilter(handle);
+    qDebug() << dev << " DEVICE NAME:::";
+    //emit sendNameDevices(getDeviceNames());
+}
+
+QStringList SniffPackets::getDeviceNames(){
     //Default network device
+    nameDevices.clear();
+
     if (pcap_findalldevs(&all_devs, errbuf) == -1)
     {
         logging->messageHandler(QtFatalMsg, QString("Error in find all devs: %1").arg(errbuf));
         QCoreApplication::exit(EXIT_FAILURE);
     }
 
-    if (dev == NULL)
+    for(d=all_devs; d; d=d->next)
     {
-        logging->messageHandler(QtFatalMsg, QString("Couldn't find default device: %1").arg(errbuf));
-        QCoreApplication::exit(EXIT_FAILURE);
+       buf.append(QString("%1 ").arg(d->name));
+       if (d->description)
+           buf.append(QString(" %1").arg(d->description));
+       else
+           logging->messageHandler(QtInfoMsg, QString("No description available for this device"));
+       nameDevices << buf.split(',');
+       buf.clear();
     }
 
-    //Find the IPv4 network number and netmask for a device
-    if(pcap_lookupnet(dev, &net, &mask, errbuf) == -1){
-        net = 0;
-        mask = 0;
-        logging->messageHandler(QtFatalMsg, QString("Can't get netmask for device %1: %2").arg(dev, errbuf));
-        QCoreApplication::exit(EXIT_FAILURE);
-    }
-
-    //Get descriptor of session (sniffing session)
-    handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
-    if(handle == NULL){
-        logging->messageHandler(QtFatalMsg, QString("Couldn't open device %1: %2").arg(dev, errbuf));
-        QCoreApplication::exit(EXIT_FAILURE);
-    }
-
-    if(pcap_compile(handle, &fp, filter_exp, 0, net) == -1){
-        logging->messageHandler(QtFatalMsg, QString("Couldn't parse filter: %1").arg(filter_exp));
-        QCoreApplication::exit(EXIT_FAILURE);
-    }
-
-    if(pcap_setfilter(handle, &fp)){
-        logging->messageHandler(QtFatalMsg, QString("Couldn't install filter: %1").arg(filter_exp));
-        QCoreApplication::exit(EXIT_FAILURE);
-    }
+    return nameDevices;
 }
 
 /*
@@ -99,7 +142,7 @@ void SniffPackets::print_hex_ascii_line(const u_char *payload, int len, int offs
     /* hex */
     ch = payload;
     for(i = 0; i < len; i++) {
-        buf.sprintf("%02x ", *ch);
+        buf.sprintf("%02X ", *ch);
         fullPayloadStr.append(buf);
         ch++;
         /* print extra space after 8th byte for visual aid */
@@ -108,6 +151,7 @@ void SniffPackets::print_hex_ascii_line(const u_char *payload, int len, int offs
             fullPayloadStr.append(buf);
         }
     }
+
     /* print space to handle line less than 8 bytes */
     if (len < 8){
         buf.sprintf(" ");
@@ -206,7 +250,7 @@ void SniffPackets::sniff(unsigned char *useless, const struct pcap_pkthdr* pkthd
 
     tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
     size_tcp = TH_OFF(tcp)*4;
-
+    ::load = size_tcp;
     if (size_tcp < 20) {
         printf("   * Invalid TCP header length: %u bytes\n", size_tcp);
         return;
@@ -245,6 +289,7 @@ void SniffPackets::sniff(unsigned char *useless, const struct pcap_pkthdr* pkthd
 void SniffPackets::refreshSniff(){
     ::row = 0;
     ::col = 0;
+    payloadLog->clearData();
     table->clearContents();
     table->setRowCount(30);
     timer(RESTART_TIMER);
@@ -255,7 +300,6 @@ void SniffPackets::stopSniff(){
 }
 
 void SniffPackets::run(){
-    init();
     refreshSniff();
     if(timerStartState){
         timer(START_TIMER);

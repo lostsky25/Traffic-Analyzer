@@ -15,31 +15,29 @@ PacketListVeiw::PacketListVeiw(QWidget *parent) : QWidget(parent)
     //Set width
     tableWidget->setMinimumWidth(1000);
 
+    //Turn off edit
+    tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
     //Set font of table (horizontal headers)
-//    headerView = tableWidget->horizontalHeader();
     tableWidget->horizontalHeader()->setFont(fontHelvetica);
-//    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     //Hide left ids
     tableWidget->verticalHeader()->hide();
 
-    //Set fixed size for cells
-//    tableWidget->horizontalHeader()->setDefaultSectionSize(20);
-//    tableWidget->verticalHeader()->setDefaultSectionSize(20);
-
     //Set font of table (headers)
     tableWidget->setFont(fontHelvetica);
 
-    //Add main headers (titles)
-//    tableWidget->setHorizontalHeaderItem(0, new QTableWidgetItem(tr("No.")));
-//    tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem(tr("Time")));
-//    tableWidget->setHorizontalHeaderItem(2, new QTableWidgetItem(tr("Source")));
-//    tableWidget->setHorizontalHeaderItem(3, new QTableWidgetItem(tr("Destination")));
-//    tableWidget->setHorizontalHeaderItem(4, new QTableWidgetItem(tr("Legth")));
-//    tableWidget->setHorizontalHeaderItem(5, new QTableWidgetItem(tr("Info")));
-
     tableWidget->setColumnCount(7);
-    tableWidget->setHorizontalHeaderLabels(QStringList() << tr("No.") << tr("Time") << tr("Source") << tr("Destination") << tr("Protocol") << tr("Legth") << tr("Info"));
+
+    //Add main headers (titles)
+    tableWidget->setHorizontalHeaderLabels(QStringList()
+                                           << tr("No.")
+                                           << tr("Time")
+                                           << tr("Source")
+                                           << tr("Destination")
+                                           << tr("Protocol")
+                                           << tr("Legth")
+                                           << tr("Info"));
     tableWidget->setColumnWidth(0, 60);
     tableWidget->setColumnWidth(1, 100);
     tableWidget->setColumnWidth(2, 145);
@@ -52,30 +50,34 @@ PacketListVeiw::PacketListVeiw(QWidget *parent) : QWidget(parent)
     tableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
-
     payloadLog = new Payload(this);
     filterExpression = new FilterExpression(this);
     sniffPackets = new SniffPackets(tableWidget, payloadLog);
 
     QObject::connect(tableWidget, &QTableWidget::cellClicked, payloadLog, &Payload::cellActivated);
-    QObject::connect(filterExpression->filterExp, SIGNAL(textChanged(const QString&)), this, SLOT(getFilterExp(const QString&)));
+    QObject::connect(filterExpression->filterExp, SIGNAL(textChanged(const QString&)), this, SLOT(setFilterExp(const QString&)));
+    QObject::connect(filterExpression, SIGNAL(selectedFilter(const QString&)), this, SLOT(setFilterExp(const QString&)));
     QObject::connect(this, &PacketListVeiw::sendFilter, sniffPackets, &SniffPackets::setFilter);
-    QObject::connect(this, &PacketListVeiw::sniffStart, payloadLog, &Payload::clearPlane);
-    QObject::connect(this, &PacketListVeiw::sniffStop, payloadLog, &Payload::clearPlane);
+    QObject::connect(this, &PacketListVeiw::sniffStarted, payloadLog, &Payload::clearPlane);
+    QObject::connect(this, &PacketListVeiw::sniffStoped, payloadLog, &Payload::clearPlane);
     QObject::connect(this, &PacketListVeiw::sniffRefresh, payloadLog, &Payload::clearPlane);
 
     verticalLayout->addWidget(filterExpression);
     verticalLayout->addWidget(tableWidget);
     verticalLayout->addWidget(payloadLog);
 
+//    filterExpression->hide();
+    tableWidget->hide();
+    payloadLog->hide();
+
+    //Set margins to zero (vertical)
     verticalLayout->setSpacing(0);
     verticalLayout->setContentsMargins(0,0,0,0);
     verticalLayout->setMargin(0);
 
-//    horizontalLayout->addWidget(tableWidget);
-//    horizontalLayout->addWidget(payloadLog);
     horizontalLayout->addLayout(verticalLayout);
 
+    //Set margins to zero (horizontal)
     horizontalLayout->setSpacing(0);
     horizontalLayout->setContentsMargins(0,0,0,0);
     horizontalLayout->setMargin(0);
@@ -83,15 +85,14 @@ PacketListVeiw::PacketListVeiw(QWidget *parent) : QWidget(parent)
     setLayout(horizontalLayout);
 }
 
-void PacketListVeiw::getFilterExp(const QString &filterExpBuf){
-    this->filterExpBuf = filterExpBuf;
+QStringList PacketListVeiw::getDeviceNames(){
+    return sniffPackets->getDeviceNames();
 }
 
-void PacketListVeiw::listUpdate(){
-    logging->messageHandler(QtInfoMsg, QString("Update list (start)"));
-    sniffPackets->start();
-    emit sniffStart();
-    emit sendFilter(this->filterExpBuf);
+void PacketListVeiw::setFilterExp(const QString &filterExpBuf){
+    logging->messageHandler(QtInfoMsg, QString("Set filter: %1").arg(filterExpBuf));
+    qDebug() << QString("Set filter: %1").arg(filterExpBuf);
+    this->filterExpBuf = filterExpBuf;
 }
 
 void PacketListVeiw::refreshList(){
@@ -103,8 +104,30 @@ void PacketListVeiw::refreshList(){
 void PacketListVeiw::stopUpdate(){
     logging->messageHandler(QtInfoMsg, QString("Stop"));
     sniffPackets->stopSniff();
-    emit sniffStop();
-//    sniffPackets->terminate(); //???
+    emit sniffStoped();
+}
 
-//    delete sniffPackets;
+void PacketListVeiw::startSniff(QTableWidgetItem *devName)
+{
+    QString name = "\\" + devName->text().toUtf8();
+    QByteArray buf = name.toLocal8Bit();
+    char *c_buf =  buf.data();
+
+    emit lastDeviceName(devName);
+
+    sniffPackets->initialyzePcap(c_buf);
+    sniffPackets->start();
+
+    if(!(tableWidget->isVisible() && payloadLog->isVisible())){
+        tableWidget->setVisible(true);
+        payloadLog->setVisible(true);
+    }
+
+    emit sniffStarted();
+
+    if(this->filterExpBuf == ""){
+        this->filterExpBuf = "tcp or udp";
+    }
+
+    //emit sendFilter(this->filterExpBuf);
 }

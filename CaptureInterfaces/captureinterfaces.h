@@ -16,6 +16,7 @@ class CaptureInterfaces : public QDialog
     Q_OBJECT
 public:
     explicit CaptureInterfaces(QWidget *parent = nullptr);
+    Input *input;
     ~CaptureInterfaces();
 
 signals:
